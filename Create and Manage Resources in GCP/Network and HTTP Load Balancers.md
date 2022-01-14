@@ -93,3 +93,105 @@ To exit, use ```CTRL + c```
 
 
 ## Createa a HTTP Load balancer
+HTTP(S) Load Balancing is implemented on Google Frent End (GFE).
+You can configure URL rules to route between given a URL and a set of instances. Requests are always routed to the instance group that is closest to the user, assuming the group has enough capacity and is appropriate for the request. Otherwise, it is routed to the next closest group that does have capacity.  
+  
+To set up a load balancer with a compute engine backend, your VMs need to be in an instance group. This managed instance group provides VMs running the backed servers of an external HTTP loaad balancer. For this example, backends serve their own hostnames  
+  
+Create a load balancer template:
+```
+gcloud compute instance-templates create lb-backend-template \
+--region=us-central1 \
+--network=default \
+--subnet=default \
+--tags=allow-health-check \
+--image-family=debian-9 \
+--image-project=debian-cloud \
+--metadata=startup-script='#! /bin/bash
+ apt-get update
+ apt-get install apache2 -y
+ a2ensite default-ssl
+ a2enmod ssl
+ vm_hostname="$(curl -H "Metadata-Flavor:Google" \
+ http://169.254.169.254/computeMetadata/v1/instance/name)"
+ echo "Page served from: $vm_hostname" | \
+ tee /var/www/html/index.html
+ systemctl restart apache2'
+```
+Create a managed instance group based on the template:
+```
+gcloud compute instance-groups managed create lb-backend-group \
+--template=lb-backend-template --size=2 --zone=us-central1-a
+```
+Create the fw-allow-health-check firewall rule.  
+This is an ingress rule that allows traffic from the Google Cloud health checking systems (130.211.0.0/22 and 35.191.0.0/16). This lab uses the target tag allow-health-check to identify the VMs.  
+```
+gcloud compute firewall-rules create fw-allow-health-check \
+--network=default \
+--action=allow \
+--direction=ingress \
+--source-ranges=130.211.0.0/22,35.191.0.0/16 \
+--target-tags=allow-health-check \
+--rules=tcp:80
+```
+With the instances up and running, set up a global static external IP address that your customers use to reach your load balancer.
+```
+gcloud compute addresses create lb-ipv4-1 \
+--ip-version=IPV4 \
+--global
+```
+Note the IPv4 address that was resereved:
+```
+gcloud compute addresses describe lb-ipv4-1 \
+--format="get(address)" \
+--global
+```
+Create a healthcheck for the load balancer:
+```
+gcloud compute health-checks create http http-basic-check \
+--port 80
+```
+Create a backend service:
+```
+gcloud compute backend-services create web-backend-service \
+--protocol=HTTP \
+--port-name=http \
+--health-checks=http-basic-check \
+--global
+```
+Add your instance group as the backend to the backend service:
+```
+gcloud compute backend-services add-backend web-backend-service \
+--instance-group=lb-backend-group \
+--instance-group-zone=us-central1-a \
+--global
+```
+Create a URL map to route the incoming requests to the default backend service:
+```
+gcloud compute url-maps create web-map-http \
+--default-service web-backend-service
+```
+Create a URL map to route the incoming requests to the default backend service:
+```
+gcloud compute url-maps create web-map-http \
+--default-service web-backend-service
+```
+Create a target HTTP proxy to routwe requests to your URL map:
+```
+gcloud compute target-http-proxies create http-lb-proxy \
+--url-map web-map-http
+```
+Create a global rule to route incoming requests to the proxy:
+```
+gcloud compute forwarding-rules create http-content-rule \
+--address=lb-ipv4-1\
+--global \
+--target-http-proxy=http-lb-proxy \
+--ports=80
+```
+
+### Test traffic sent to your instances
+In the Cloud Console, from the Navigation menu, go to Network services > Load balancing.
+Click on the load balancer that you just created (web-map-http).
+In the Backend section, click on the name of the backend and confirm that the VMs are Healthy. If they are not healthy, wait a few moments and try reloading the page.
+When the VMs are healthy, test the load balancer using a web browser, going to ```http://IP_ADDRESS/```, replacing IP_ADDRESS with the load balancer's IP address.
