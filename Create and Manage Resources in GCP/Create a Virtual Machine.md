@@ -7,7 +7,7 @@ You can start a Virtual Machine in GCP with the console or the command line tool
 ### Creating a new Compute Engine:
 The Parameters you can configure when creating a new instance could include:
 - Name
-- [Region](https://github.com/KyeMML) and [Zone](https://github.com/KyeMML)
+- [Region and Zone](https://github.com/KyeMML/GCP/blob/main/Create%20and%20Manage%20Resources%20in%20GCP/Regions%20and%20Zones.md)
 - Series
 - Machine Type
 - Boot Disk
