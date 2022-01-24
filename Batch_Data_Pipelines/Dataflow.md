@@ -24,6 +24,31 @@ Recommended for new data procesing pipelines, unified batch and streaming
 ## Dataflow Pipeline Examples
 To facilitate a simple dataflow:  
 PCollection_input -> PTransform_1 -> PTransform_2 -> PTransform_3 -> PCollection_output  
-```Python 3.0
+```Python
 PCollection_output = (PCollection_input | PTransform_1 | Ptransform_2 | PTransform_3)
+```  
+  
+To create a PCollection  
+```Python
+import apache_beam as beam
+
+if __name__ == '__main__':
+  with beam.Pipeline(argv=sys.argv) as p:
+    (p
+      | beam.io.ReadFromText('gs://...') # read input
+      | beam.FlatMap(count_words) # apply transform
+      | beam.io.WriteToText('gs://...') # write output
+    )
+  # end of with-clause: runs, stops the pipeline
+```  
+  
+# Run a pipline on Dataflow  
+```Python
+import apache_beam as beam
+opions = {'project': <project>,
+          'runner': 'DataflowRnnner', # where to run
+          'region': <region>,
+          'setup_file': <setup.py file>}
+pipline_options = beam.pipeline.PipelineOptions(flags=[],**options)
+pipeline = beam.Pipeline(options = pipeline_options) # this creates the pipeline
 ```
