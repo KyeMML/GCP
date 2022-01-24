@@ -22,8 +22,8 @@ Recommended for new data procesing pipelines, unified batch and streaming
   -  services runner used to execute the code is the backend system
 
 ## Dataflow Pipeline Examples
-To facilitate a simple dataflow:
-PCollection_input -> PTransform_1 -> PTransform_2 -> PTransform_3 -> PCollection_output
-```Python
+To facilitate a simple dataflow:  
+PCollection_input -> PTransform_1 -> PTransform_2 -> PTransform_3 -> PCollection_output  
+```Python 3.0
 PCollection_output = (PCollection_input | PTransform_1 | Ptransform_2 | PTransform_3)
 ```
