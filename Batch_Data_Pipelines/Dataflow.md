@@ -42,7 +42,7 @@ if __name__ == '__main__':
   # end of with-clause: runs, stops the pipeline
 ```  
   
-# Run a pipline on Dataflow  
+Run a pipline on Dataflow  
 ```Python
 import apache_beam as beam
 opions = {'project': <project>,
@@ -52,3 +52,4 @@ opions = {'project': <project>,
 pipline_options = beam.pipeline.PipelineOptions(flags=[],**options)
 pipeline = beam.Pipeline(options = pipeline_options) # this creates the pipeline
 ```
+Note: it is recommended top replace the hard-coded variables
