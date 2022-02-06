@@ -31,3 +31,7 @@ When a project is created, BigQuery grants the owner role to the user who create
   - can list and get all jobs run on the project, including jobs run by other project users
   - BigQuery grants existing users with Owner permissions owner roles in any new datasets. 
  Recommended to use different projects or datasets for different environments (eg. DEV, QA, PRD)
+
+
+Transformations might favour cloud dataflow when ingesting data into BigQuery, but it is possible to ingest data straight into BigQuery
+
